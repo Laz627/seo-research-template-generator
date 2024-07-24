@@ -1,7 +1,5 @@
 import streamlit as st
-import pandas as pd
 from docx import Document
-import csv
 from io import BytesIO
 
 # CTR data
@@ -50,7 +48,7 @@ def main():
     ### How to use this tool:
     1. Fill in the information for each section below.
     2. Use the tooltips (?) for guidance on SEO best practices.
-    3. Click the download buttons to generate reports in Word or CSV format.
+    3. Click the download button to generate a report in Word format.
     """)
 
     if 'data' not in st.session_state:
@@ -62,22 +60,12 @@ def main():
     internal_links()
     traffic_and_conversions()
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button(
-            label="Download Word Report",
-            data=get_word_download(),
-            file_name="seo_content_optimization_report.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-
-    with col2:
-        st.download_button(
-            label="Download CSV Report",
-            data=get_csv_download(),
-            file_name="seo_content_optimization_report.csv",
-            mime="text/csv"
-        )
+    st.download_button(
+        label="Download Word Report",
+        data=get_word_download(),
+        file_name="seo_content_optimization_report.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
 
 def keyword_research():
     st.header("Keyword Research")
@@ -161,11 +149,6 @@ def on_page_elements():
     st.session_state.data['Keyword Included In First 100 Words Of Article'] = st.checkbox(
         "Keyword Included In First 100 Words Of Article",
         help="Check if the primary keyword appears in the first 100 words of the content."
-    )
-    
-    st.session_state.data['Internal Links To Include'] = st.text_area(
-        "Internal Links To Include",
-        help="Enter internal links that should be included on the page. Separate each link with a new line."
     )
     
     st.session_state.data['Proper Heading Hierarchy'] = st.checkbox(
@@ -311,7 +294,7 @@ def export_to_word(data, keyword_data, traffic_data):
     on_page_fields = [
         'Recommended Title (H1)', 'Recommended Page Title', 'Recommended Page Description',
         'Recommended URL', 'Canonical URL', 'Keyword Included In First 100 Words Of Article',
-        'Internal Links To Include', 'Proper Heading Hierarchy', 'Schema Markup', 'Indexable and should be included in sitemap.xml'
+        'Proper Heading Hierarchy', 'Schema Markup', 'Indexable and should be included in sitemap.xml'
     ]
     
     for field in on_page_fields:
@@ -347,58 +330,9 @@ def export_to_word(data, keyword_data, traffic_data):
     
     return doc_io
 
-def export_to_csv(data, keyword_data, traffic_data):
-    csv_io = BytesIO()
-    writer = csv.writer(csv_io)
-    
-    writer.writerow(["SEO Content Optimization Report"])
-    writer.writerow([])
-    
-    if keyword_data and traffic_data:
-        writer.writerow(["Keyword Data"])
-        writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic", "Incremental App Starts", "Incremental App Submits"])
-        for kw, td in zip(keyword_data, traffic_data):
-            writer.writerow([
-                kw['keyword'], kw['search_volume'], kw['current_rank'], kw.get('target_rank', ''),
-                td.get('incremental_traffic', ''), td.get('incremental_app_starts', ''), td.get('incremental_app_submits', '')
-            ])
-    
-    writer.writerow([])
-    writer.writerow(["SERP Analysis"])
-    for field in ['Search Intent For Target Keyword', 'Search Result Features For Target Keyword', 'FAQs Present Within Search Results']:
-        writer.writerow([field, data.get(field, '')])
-    
-    writer.writerow([])
-    writer.writerow(["On-Page Elements"])
-    on_page_fields = [
-        'Recommended Title (H1)', 'Recommended Page Title', 'Recommended Page Description',
-        'Recommended URL', 'Canonical URL', 'Keyword Included In First 100 Words Of Article',
-        'Internal Links To Include', 'Proper Heading Hierarchy', 'Schema Markup', 'Indexable and should be included in sitemap.xml'
-    ]
-    for field in on_page_fields:
-        value = data.get(field, '')
-        if isinstance(value, bool):
-            value = 'Yes' if value else 'No'
-        elif isinstance(value, list):
-            value = ', '.join(value)
-        writer.writerow([field, value])
-    
-    writer.writerow([])
-    writer.writerow(["Internal Links"])
-    writer.writerow(["URL", "Anchor Text", "Type"])
-    for link in st.session_state.internal_links:
-        writer.writerow([link.get('url', ''), link.get('anchor_text', ''), link.get('type', '')])
-    
-    csv_io.seek(0)
-    return csv_io
-
 def get_word_download():
     word_file = export_to_word(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
     return word_file.getvalue()
-
-def get_csv_download():
-    csv_file = export_to_csv(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
-    return csv_file.getvalue()
 
 if __name__ == "__main__":
     main()
