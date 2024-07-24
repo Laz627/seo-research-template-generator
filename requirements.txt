@@ -1,3 +1,4 @@
 streamlit
 pandas
 python-docx
+from io import BytesIO
