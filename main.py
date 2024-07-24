@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from docx import Document
 import csv
+from io import BytesIO
 
 # CTR data
 ctr_data = {
@@ -49,7 +50,7 @@ def main():
     ### How to use this tool:
     1. Fill in the information for each section below.
     2. Use the tooltips (?) for guidance on SEO best practices.
-    3. Click the export buttons to generate reports in Word or CSV format.
+    3. Click the download buttons to generate reports in Word or CSV format.
     """)
 
     if 'data' not in st.session_state:
@@ -61,11 +62,24 @@ def main():
     internal_links()
     traffic_and_conversions()
 
-    if st.button("Export to Word"):
-        export_to_word(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
+    col1, col2 = st.columns(2)
+    with col1:
+        word_file = export_to_word(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
+        st.download_button(
+            label="Download Word Report",
+            data=word_file,
+            file_name="seo_content_optimization_report.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
 
-    if st.button("Export to CSV"):
-        export_to_csv(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
+    with col2:
+        csv_file = export_to_csv(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
+        st.download_button(
+            label="Download CSV Report",
+            data=csv_file,
+            file_name="seo_content_optimization_report.csv",
+            mime="text/csv"
+        )
 
 def keyword_research():
     st.header("Keyword Research")
@@ -293,30 +307,36 @@ def export_to_word(data, keyword_data, traffic_data):
         row_cells[1].text = link['anchor_text']
         row_cells[2].text = link['type']
     
-    doc.save("seo_content_optimization_report.docx")
-    st.success("Word document exported successfully!")
+    # Save the document to a BytesIO object
+    doc_io = BytesIO()
+    doc.save(doc_io)
+    doc_io.seek(0)
+    
+    return doc_io
 
 def export_to_csv(data, keyword_data, traffic_data):
-    with open('seo_content_optimization_report.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Keyword Data"])
-        writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic"])
-        for kw, td in zip(keyword_data, traffic_data):
-            writer.writerow([kw['keyword'], kw['search_volume'], kw['current_rank'], kw['target_rank'], td['incremental_traffic']])
-        
-        writer.writerow([])
-        writer.writerow(["On-Page Elements"])
-        for field, value in data.items():
-            if field not in ['app_start_rate', 'app_submit_rate']:
-                writer.writerow([field, value])
-        
-        writer.writerow([])
-        writer.writerow(["Internal Links"])
-        writer.writerow(["URL", "Anchor Text", "Type"])
-        for link in st.session_state.internal_links:
-            writer.writerow([link['url'], link['anchor_text'], link['type']])
+    csv_io = BytesIO()
+    writer = csv.writer(csv_io)
     
-    st.success("CSV file exported successfully!")
+    writer.writerow(["Keyword Data"])
+    writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic"])
+    for kw, td in zip(keyword_data, traffic_data):
+        writer.writerow([kw['keyword'], kw['search_volume'], kw['current_rank'], kw['target_rank'], td['incremental_traffic']])
+    
+    writer.writerow([])
+    writer.writerow(["On-Page Elements"])
+    for field, value in data.items():
+        if field not in ['app_start_rate', 'app_submit_rate']:
+            writer.writerow([field, value])
+    
+    writer.writerow([])
+    writer.writerow(["Internal Links"])
+    writer.writerow(["URL", "Anchor Text", "Type"])
+    for link in st.session_state.internal_links:
+        writer.writerow([link['url'], link['anchor_text'], link['type']])
+    
+    csv_io.seek(0)
+    return csv_io
 
 if __name__ == "__main__":
     main()
