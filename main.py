@@ -64,19 +64,17 @@ def main():
 
     col1, col2 = st.columns(2)
     with col1:
-        word_file = export_to_word(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
         st.download_button(
             label="Download Word Report",
-            data=word_file,
+            data=get_word_download(),
             file_name="seo_content_optimization_report.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
     with col2:
-        csv_file = export_to_csv(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
         st.download_button(
             label="Download CSV Report",
-            data=csv_file,
+            data=get_csv_download(),
             file_name="seo_content_optimization_report.csv",
             mime="text/csv"
         )
@@ -216,18 +214,20 @@ def internal_links():
 
 def calculate_all_traffic_and_conversions():
     all_traffic_data = []
-    for keyword in st.session_state.keyword_data:
-        traffic_data = calculate_traffic_and_conversions(
-            keyword['search_volume'],
-            keyword['current_rank'],
-            keyword['target_rank'],
-            st.session_state.data['app_start_rate'],
-            st.session_state.data['app_submit_rate']
-        )
-        all_traffic_data.append({
-            'keyword': keyword['keyword'],
-            **traffic_data
-        })
+    if 'keyword_data' in st.session_state and st.session_state.keyword_data:
+        for keyword in st.session_state.keyword_data:
+            if 'app_start_rate' in st.session_state.data and 'app_submit_rate' in st.session_state.data:
+                traffic_data = calculate_traffic_and_conversions(
+                    keyword.get('search_volume', 0),
+                    keyword.get('current_rank', 1),
+                    keyword.get('target_rank', 1),
+                    st.session_state.data['app_start_rate'],
+                    st.session_state.data['app_submit_rate']
+                )
+                all_traffic_data.append({
+                    'keyword': keyword['keyword'],
+                    **traffic_data
+                })
     return all_traffic_data
 
 def traffic_and_conversions():
@@ -288,9 +288,17 @@ def export_to_word(data, keyword_data, traffic_data):
     
     # Add other data
     doc.add_heading("On-Page Elements", level=1)
+    elements_table = doc.add_table(rows=1, cols=2)
+    elements_table.style = 'Table Grid'
+    hdr_cells = elements_table.rows[0].cells
+    hdr_cells[0].text = 'Element'
+    hdr_cells[1].text = 'Value'
+    
     for field, value in data.items():
         if field not in ['app_start_rate', 'app_submit_rate']:
-            doc.add_paragraph(f"{field}: {value}")
+            row_cells = elements_table.add_row().cells
+            row_cells[0].text = field
+            row_cells[1].text = str(value)
     
     # Add internal links
     doc.add_heading("Internal Links", level=1)
@@ -318,13 +326,18 @@ def export_to_csv(data, keyword_data, traffic_data):
     csv_io = BytesIO()
     writer = csv.writer(csv_io)
     
-    writer.writerow(["Keyword Data"])
-    writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic"])
-    for kw, td in zip(keyword_data, traffic_data):
-        writer.writerow([kw['keyword'], kw['search_volume'], kw['current_rank'], kw['target_rank'], td['incremental_traffic']])
+    writer.writerow(["SEO Content Optimization Report"])
+    writer.writerow([])
+    
+    if keyword_data and traffic_data:
+        writer.writerow(["Keyword Data"])
+        writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic"])
+        for kw, td in zip(keyword_data, traffic_data):
+            writer.writerow([kw['keyword'], kw['search_volume'], kw['current_rank'], kw.get('target_rank', ''), td.get('incremental_traffic', '')])
     
     writer.writerow([])
     writer.writerow(["On-Page Elements"])
+    writer.writerow(["Element", "Value"])
     for field, value in data.items():
         if field not in ['app_start_rate', 'app_submit_rate']:
             writer.writerow([field, value])
@@ -333,7 +346,7 @@ def export_to_csv(data, keyword_data, traffic_data):
     writer.writerow(["Internal Links"])
     writer.writerow(["URL", "Anchor Text", "Type"])
     for link in st.session_state.internal_links:
-        writer.writerow([link['url'], link['anchor_text'], link['type']])
+        writer.writerow([link.get('url', ''), link.get('anchor_text', ''), link.get('type', '')])
     
     csv_io.seek(0)
     return csv_io
@@ -345,44 +358,6 @@ def get_word_download():
 def get_csv_download():
     csv_file = export_to_csv(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
     return csv_file.getvalue()
-
-def main():
-    st.set_page_config(page_title="SEO Content Optimizer", layout="wide")
-    st.title("SEO Content Optimizer")
-    st.write("Created by Brandon Lazovic")
-    
-    st.markdown("""
-    ### How to use this tool:
-    1. Fill in the information for each section below.
-    2. Use the tooltips (?) for guidance on SEO best practices.
-    3. Click the download buttons to generate reports in Word or CSV format.
-    """)
-
-    if 'data' not in st.session_state:
-        st.session_state.data = {}
-
-    keyword_research()
-    serp_analysis()
-    on_page_elements()
-    internal_links()
-    traffic_and_conversions()
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button(
-            label="Download Word Report",
-            data=get_word_download(),
-            file_name="seo_content_optimization_report.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-
-    with col2:
-        st.download_button(
-            label="Download CSV Report",
-            data=get_csv_download(),
-            file_name="seo_content_optimization_report.csv",
-            mime="text/csv"
-        )
 
 if __name__ == "__main__":
     main()
