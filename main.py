@@ -323,6 +323,24 @@ def export_to_word(data, keyword_data, traffic_data):
         row_cells[1].text = link['anchor_text']
         row_cells[2].text = link['type']
     
+    # SEO On-Page Checklist
+    doc.add_heading("SEO On-Page Checklist", level=1)
+    checklist = """
+1. Keyword Research - select 1 primary keyword and 3-5 secondary keywords to target. Primary keyword should be incorporated in major elements on-page; secondary keywords should be incorporated within sub-heads / body copy on-page. 
+2. SERP analysis / competitor page review (what features are included in the SERPs; what are competitors doing well; does the keyword intent match the page type we're updating)
+3. H1 tag - does it include primary keyword? Is it less than 65 characters in length?
+4. Title tag – does it include primary keyword? Is it less than 65 characters in length?
+5. Meta description – does it include the primary keyword? Is it 155 characters or less in length?
+6. Is primary keyword included in first 100 words of article? 
+7. Are secondary keywords included in sub-heads / on-page content? 
+8. Internal links - are we pointing to other articles or existing product pages, with anchor text that includes the primary keyword for the referenced page? 
+9. Breadcrumbs - do they match the proper format / include the primary keyword? Do they occupy less than 2 lines of space on desktop / mobile?
+10. Schema markup – what kinds of schema should be included in the page? Examples: breadcrumblist, article, FAQ, etc…. 
+11. Any other subheads / blocks of copy that competitors have that we don't that should be included? 
+12. URL recommendation - does it include primary keyword, follow URL best practice (lowercase, no stop-words, hyphens only, etc…).
+    """
+    doc.add_paragraph(checklist)
+    
     # Save the document to a BytesIO object
     doc_io = BytesIO()
     doc.save(doc_io)
