@@ -115,62 +115,64 @@ def keyword_research():
 def serp_analysis():
     st.header("SERP Analysis")
     
-    st.session_state.data['search_intent'] = st.text_area(
-        "Search Intent",
+    st.session_state.data['Search Intent For Target Keyword'] = st.text_area(
+        "Search Intent For Target Keyword",
         help="Describe the search intent for the primary keyword."
     )
     
-    st.session_state.data['search_features'] = st.text_area(
-        "Search Features",
+    st.session_state.data['Search Result Features For Target Keyword'] = st.text_area(
+        "Search Result Features For Target Keyword",
         help="List the search features present in the SERP for the primary keyword."
     )
     
-    st.session_state.data['common_questions'] = st.text_area(
-        "Common Questions",
+    st.session_state.data['FAQs Present Within Search Results'] = st.text_area(
+        "FAQs Present Within Search Results",
         help="List common questions asked by users related to the primary keyword."
     )
 
 def on_page_elements():
     st.header("On-Page Elements")
     
-    st.session_state.data['h1_tag'] = st.text_input(
-        "H1 Tag",
+    st.session_state.data['Recommended Title (H1)'] = st.text_input(
+        "Recommended Title (H1)",
         help="Enter the H1 tag. Ensure the primary keyword is targeted and it's 65 characters or less.",
         max_chars=65
     )
     
-    st.session_state.data['meta_title'] = st.text_input(
-        "Meta Title",
+    st.session_state.data['Recommended Page Title'] = st.text_input(
+        "Recommended Page Title",
         help="Enter the meta title. Ensure the primary keyword is targeted and it's 65 characters or less.",
         max_chars=65
     )
     
-    st.session_state.data['meta_description'] = st.text_area(
-        "Meta Description",
+    st.session_state.data['Recommended Page Description'] = st.text_area(
+        "Recommended Page Description",
         help="Enter the meta description. Ensure the primary keyword is targeted and it's 155 characters or less.",
         max_chars=155
     )
     
-    st.session_state.data['url_recommendation'] = st.text_input(
-        "URL Recommendation",
+    st.session_state.data['Recommended URL'] = st.text_input(
+        "Recommended URL",
         help="Enter the recommended URL. Ensure the primary keyword is in the slug, it's lowercase, stop-words are omitted, uses hyphens, and is concise."
     )
     
-    st.session_state.data['keyword_in_first_100'] = st.checkbox(
-        "Is the primary keyword included in the first 100 words of the article?",
+    st.session_state.data['Canonical URL'] = st.session_state.data['Recommended URL']
+    
+    st.session_state.data['Keyword Included In First 100 Words Of Article'] = st.checkbox(
+        "Keyword Included In First 100 Words Of Article",
         help="Check if the primary keyword appears in the first 100 words of the content."
     )
     
-    st.session_state.data['faqs'] = st.text_area(
-        "FAQs to include as subheads",
-        help="Enter FAQs that should be included on-page as subheads. Separate each FAQ with a new line."
+    st.session_state.data['Internal Links To Include'] = st.text_area(
+        "Internal Links To Include",
+        help="Enter internal links that should be included on the page. Separate each link with a new line."
     )
     
-    st.session_state.data['breadcrumbs'] = st.text_input(
-        "Breadcrumbs",
-        help="Enter the breadcrumb structure. Ensure it meets proper format and aligns with the primary keyword target."
+    st.session_state.data['Proper Heading Hierarchy'] = st.checkbox(
+        "Proper Heading Hierarchy",
+        help="Check if the page follows proper heading hierarchy (e.g., single H1, H2s precede H3s, etc.)"
     )
-    
+
     schema_options = [
         "None", "WebPage", "Article", "Product", "FAQ", "HowTo", "LocalBusiness", 
         "Event", "Recipe", "Review", "BreadcrumbList", "FinancialProduct", 
@@ -178,15 +180,15 @@ def on_page_elements():
         "SoftwareApplication", "Course", "JobPosting"
     ]
     
-    st.session_state.data['schema_markup'] = st.multiselect(
+    st.session_state.data['Schema Markup'] = st.multiselect(
         "Schema Markup",
         options=schema_options,
         help="Select the schema markup types that should be included on the page."
     )
-    
-    st.session_state.data['heading_hierarchy'] = st.checkbox(
-        "Does this page follow heading hierarchy best practices?",
-        help="Check if the page follows proper heading hierarchy (e.g., single H1, H2s precede H3s, etc.)"
+
+    st.session_state.data['Indexable and should be included in sitemap.xml'] = st.checkbox(
+        "Indexable and should be included in sitemap.xml",
+        help="Check if this page should be indexed and included in the sitemap."
     )
 
 def internal_links():
@@ -226,7 +228,9 @@ def calculate_all_traffic_and_conversions():
                 )
                 all_traffic_data.append({
                     'keyword': keyword['keyword'],
-                    **traffic_data
+                    'incremental_traffic': traffic_data['incremental_traffic'],
+                    'incremental_app_starts': traffic_data['incremental_app_starts'],
+                    'incremental_app_submits': traffic_data['incremental_app_submits']
                 })
     return all_traffic_data
 
@@ -267,9 +271,9 @@ def export_to_word(data, keyword_data, traffic_data):
     doc = Document()
     doc.add_heading("SEO Content Optimization Report", 0)
     
-    # Add keyword data table
+    # Keyword Data table
     doc.add_heading("Keyword Data", level=1)
-    keyword_table = doc.add_table(rows=1, cols=5)
+    keyword_table = doc.add_table(rows=1, cols=7)
     keyword_table.style = 'Table Grid'
     hdr_cells = keyword_table.rows[0].cells
     hdr_cells[0].text = 'Keyword'
@@ -277,6 +281,8 @@ def export_to_word(data, keyword_data, traffic_data):
     hdr_cells[2].text = 'Current Rank'
     hdr_cells[3].text = 'Target Rank'
     hdr_cells[4].text = 'Incremental Traffic'
+    hdr_cells[5].text = 'Incremental App Starts'
+    hdr_cells[6].text = 'Incremental App Submits'
     
     for kw, td in zip(keyword_data, traffic_data):
         row_cells = keyword_table.add_row().cells
@@ -285,22 +291,41 @@ def export_to_word(data, keyword_data, traffic_data):
         row_cells[2].text = str(kw['current_rank'])
         row_cells[3].text = str(kw['target_rank'])
         row_cells[4].text = str(td['incremental_traffic'])
+        row_cells[5].text = str(td['incremental_app_starts'])
+        row_cells[6].text = str(td['incremental_app_submits'])
     
-    # Add other data
+    # SERP Analysis table
+    doc.add_heading("SERP Analysis", level=1)
+    serp_table = doc.add_table(rows=1, cols=2)
+    serp_table.style = 'Table Grid'
+    for field in ['Search Intent For Target Keyword', 'Search Result Features For Target Keyword', 'FAQs Present Within Search Results']:
+        row_cells = serp_table.add_row().cells
+        row_cells[0].text = field
+        row_cells[1].text = data.get(field, '')
+    
+    # On-Page Elements table
     doc.add_heading("On-Page Elements", level=1)
     elements_table = doc.add_table(rows=1, cols=2)
     elements_table.style = 'Table Grid'
-    hdr_cells = elements_table.rows[0].cells
-    hdr_cells[0].text = 'Element'
-    hdr_cells[1].text = 'Value'
     
-    for field, value in data.items():
-        if field not in ['app_start_rate', 'app_submit_rate']:
-            row_cells = elements_table.add_row().cells
-            row_cells[0].text = field
+    on_page_fields = [
+        'Recommended Title (H1)', 'Recommended Page Title', 'Recommended Page Description',
+        'Recommended URL', 'Canonical URL', 'Keyword Included In First 100 Words Of Article',
+        'Internal Links To Include', 'Proper Heading Hierarchy', 'Schema Markup', 'Indexable and should be included in sitemap.xml'
+    ]
+    
+    for field in on_page_fields:
+        row_cells = elements_table.add_row().cells
+        row_cells[0].text = field
+        value = data.get(field, '')
+        if isinstance(value, bool):
+            row_cells[1].text = 'Yes' if value else 'No'
+        elif isinstance(value, list):
+            row_cells[1].text = ', '.join(value)
+        else:
             row_cells[1].text = str(value)
     
-    # Add internal links
+    # Internal Links table
     doc.add_heading("Internal Links", level=1)
     links_table = doc.add_table(rows=1, cols=3)
     links_table.style = 'Table Grid'
@@ -331,16 +356,32 @@ def export_to_csv(data, keyword_data, traffic_data):
     
     if keyword_data and traffic_data:
         writer.writerow(["Keyword Data"])
-        writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic"])
+        writer.writerow(["Keyword", "Search Volume", "Current Rank", "Target Rank", "Incremental Traffic", "Incremental App Starts", "Incremental App Submits"])
         for kw, td in zip(keyword_data, traffic_data):
-            writer.writerow([kw['keyword'], kw['search_volume'], kw['current_rank'], kw.get('target_rank', ''), td.get('incremental_traffic', '')])
+            writer.writerow([
+                kw['keyword'], kw['search_volume'], kw['current_rank'], kw.get('target_rank', ''),
+                td.get('incremental_traffic', ''), td.get('incremental_app_starts', ''), td.get('incremental_app_submits', '')
+            ])
+    
+    writer.writerow([])
+    writer.writerow(["SERP Analysis"])
+    for field in ['Search Intent For Target Keyword', 'Search Result Features For Target Keyword', 'FAQs Present Within Search Results']:
+        writer.writerow([field, data.get(field, '')])
     
     writer.writerow([])
     writer.writerow(["On-Page Elements"])
-    writer.writerow(["Element", "Value"])
-    for field, value in data.items():
-        if field not in ['app_start_rate', 'app_submit_rate']:
-            writer.writerow([field, value])
+    on_page_fields = [
+        'Recommended Title (H1)', 'Recommended Page Title', 'Recommended Page Description',
+        'Recommended URL', 'Canonical URL', 'Keyword Included In First 100 Words Of Article',
+        'Internal Links To Include', 'Proper Heading Hierarchy', 'Schema Markup', 'Indexable and should be included in sitemap.xml'
+    ]
+    for field in on_page_fields:
+        value = data.get(field, '')
+        if isinstance(value, bool):
+            value = 'Yes' if value else 'No'
+        elif isinstance(value, list):
+            value = ', '.join(value)
+        writer.writerow([field, value])
     
     writer.writerow([])
     writer.writerow(["Internal Links"])
