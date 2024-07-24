@@ -40,8 +40,8 @@ def calculate_traffic_and_conversions(search_volume, current_rank, target_rank, 
     }
 
 def main():
-    st.set_page_config(page_title="SEO Content Optimizer", layout="wide")
-    st.title("SEO Content Optimizer")
+    st.set_page_config(page_title="SEO Content Brief Template Generator", layout="wide")
+    st.title("SEO Content Brief Template Generator")
     st.write("Created by Brandon Lazovic")
     
     st.markdown("""
