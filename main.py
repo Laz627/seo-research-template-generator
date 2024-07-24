@@ -338,5 +338,51 @@ def export_to_csv(data, keyword_data, traffic_data):
     csv_io.seek(0)
     return csv_io
 
+def get_word_download():
+    word_file = export_to_word(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
+    return word_file.getvalue()
+
+def get_csv_download():
+    csv_file = export_to_csv(st.session_state.data, st.session_state.keyword_data, calculate_all_traffic_and_conversions())
+    return csv_file.getvalue()
+
+def main():
+    st.set_page_config(page_title="SEO Content Optimizer", layout="wide")
+    st.title("SEO Content Optimizer")
+    st.write("Created by Brandon Lazovic")
+    
+    st.markdown("""
+    ### How to use this tool:
+    1. Fill in the information for each section below.
+    2. Use the tooltips (?) for guidance on SEO best practices.
+    3. Click the download buttons to generate reports in Word or CSV format.
+    """)
+
+    if 'data' not in st.session_state:
+        st.session_state.data = {}
+
+    keyword_research()
+    serp_analysis()
+    on_page_elements()
+    internal_links()
+    traffic_and_conversions()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            label="Download Word Report",
+            data=get_word_download(),
+            file_name="seo_content_optimization_report.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
+    with col2:
+        st.download_button(
+            label="Download CSV Report",
+            data=get_csv_download(),
+            file_name="seo_content_optimization_report.csv",
+            mime="text/csv"
+        )
+
 if __name__ == "__main__":
     main()
