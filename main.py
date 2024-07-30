@@ -94,11 +94,11 @@ def keyword_research():
         with col4:
             if st.button("Remove", key=f"remove_{i}"):
                 remove_keyword(i)
-                st.experimental_rerun()
+                st.rerun()
     
     if st.button("Add Keyword"):
         add_keyword()
-        st.experimental_rerun()
+        st.rerun()
 
 def serp_analysis():
     st.header("SERP Analysis")
@@ -191,11 +191,11 @@ def internal_links():
         with col4:
             if st.button("Remove", key=f"remove_link_{i}"):
                 st.session_state.internal_links.pop(i)
-                st.experimental_rerun()
+                st.rerun()
     
     if st.button("Add Internal Link"):
         st.session_state.internal_links.append({"url": "", "anchor_text": "", "type": "Product"})
-        st.experimental_rerun()
+        st.rerun()
 
 def calculate_all_traffic_and_conversions():
     all_traffic_data = []
